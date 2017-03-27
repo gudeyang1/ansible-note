@@ -1,0 +1,88 @@
+如何查看模块帮助:
+	ansible-doc -l 
+	ansible-doc -s
+
+
+ansible 命令应用基础:
+	语法:ansible <host-pattern> [-m module_name] [-a args] [options]
+		-f  forks  启动的并发线程数
+		-m  module name: 要使用的模块
+		-a args :模块特有的参数
+
+
+
+常见模块:
+		command: 命令模块, 默认模块, 用于在远程执行命令
+			 #只在192.168.0.18上运行命令		
+			  68* ansible 192.168.0.18 -m command -a 'date '
+			  #在所有机器上运行命令
+		   	  69  ansible all -m command -a 'date'
+		cron:
+		 	state:
+		 		present: 安装
+		 		absent:  移除
+		 	ansible all -m cron -a 'minute="*/10" name="test" jon="echo hello"'
+		 	创建一个叫test的计划任务
+		 	[root@localhost ~]# ansible all -m command -a "crontab -l"
+			192.168.0.20 | SUCCESS | rc=0 >>
+			#Ansible: test
+			*/10 * * * * echo hello
+			删除计划任务
+			[root@localhost ~]# ansible all -m cron -a 'minute="*/10" name="test" job="echo hello" state=absent'
+
+		user:
+			state: 
+				present: 创建用户
+				absent: 删除用户
+			name:
+				name=: 指定用户名
+			#创建用户
+			[root@localhost ~]# ansible all -m user -a 'name="user1"'
+			#删除用户
+			[root@localhost ~]# ansible all -m user -a 'name="user1" state="absent"'
+
+		group:
+			name=:
+			gid=:
+			[root@localhost ~]# ansible all -m group -a 'name=mysql gid=306 system=yes'
+
+		copy:
+			src=: 源文件路径
+			dest=: 目的地路径
+			content=: 取代src ,直接用此处的信息生成目标文件的内容
+
+			[root@localhost ~]# ansible all -m copy -a 'src=/etc/fstab dest=/tmp/fstab.ansible mode=600'
+			[root@localhost ~]# ansible all -m copy -a 'content="wqwqwqwqwqwq\n" dest=/tmp/fstab.ansible mode=600'
+
+		file: 改变文件属性
+
+			path=: 指定目的文件路径,可以用name 或dest 替代
+			[root@localhost ~]# ansible all -m file -a 'mode=777 owner=mysql path=/tmp/fstab.ansible'
+
+			#创建软连接
+			[root@localhost ~]# ansible all -m file -a 'src=/tmp/fstab.ansible path=/tmp/fstab.link state=link'
+
+			
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+		
+
