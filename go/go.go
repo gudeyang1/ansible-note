@@ -273,29 +273,115 @@ func main() {
 
 7.3 copy
 
-func main() {
-	s1 := []int{1,2,3,4,5,6}
-	s2:= []int{7,8,9}
-	copy(s1,s2) //把s2copy到s1
-	fmt.Println(s1)
-}
-输出:
-[7 8 9 4 5 6]
+	func main() {
+		s1 := []int{1,2,3,4,5,6}
+		s2:= []int{7,8,9}
+		copy(s1,s2) //把s2copy到s1
+		fmt.Println(s1)
+	}
+	输出:
+	[7 8 9 4 5 6]
 
-func main() {
-	s1 := []int{1,2,3,4,5,6}
-	s2:= []int{7,8,9}
-	copy(s2,s1)
-	fmt.Println(s2)
-}
-输出:
-[1 2 3]
-指定位置copy
-func main() {
-	s1 := []int{1,2,3,4,5,6}
-	s2:= []int{7,8,9}
-	copy(s2[1:3],s1[3:5])
-	fmt.Println(s2)
-}
-输出:
-[7 4 5]
+	func main() {
+		s1 := []int{1,2,3,4,5,6}
+		s2:= []int{7,8,9}
+		copy(s2,s1) //把s1 copy到s2
+		fmt.Println(s2)
+	}
+	输出:
+	[1 2 3]
+	指定位置copy
+	func main() {
+		s1 := []int{1,2,3,4,5,6}
+		s2:= []int{7,8,9}
+		copy(s2[1:3],s1[3:5])
+		fmt.Println(s2)
+	}
+	输出:
+	[7 4 5]
+
+8. map
+8.1 定义
+	func main() {
+		m := make(map[int]string)
+		fmt.Println(m)
+
+	}
+	输出:
+	map[]
+8.2 赋值
+	func main() {
+		m :=make(map[int]string)
+		m[1]="ok"
+		//delete(m,1)
+		a := m[1]
+		fmt.Println(a)
+		fmt.Println(m)
+	}
+	输出:
+	ok
+	map[1:ok]
+8.3 delete 
+	func main() {
+		m :=make(map[int]string)
+		m[1]="ok"
+		delete(m,1)  //删除m 里面key 为1
+		a := m[1]
+		fmt.Println(a)
+		fmt.Println(m)
+	}
+	输出:
+	map[]
+
+8.4 迭代
+	func main() {
+		//列表里面套字典
+		sm:=make([]map[int]string,5)
+		for _,v:=range sm{
+			//对字典初始化
+			v=make(map[int]string)
+			v[1]="OK"
+			fmt.Println(v)	
+		}
+		fmt.Println(sm)
+	}
+	输出:
+		map[1:OK]
+		map[1:OK]
+		map[1:OK]
+		map[1:OK]
+		map[1:OK]
+		[map[] map[] map[] map[] map[]]  // 列表sm 没有改变
+
+	//改变sm 列表
+	func main() {
+		sm:=make([]map[int]string,5)
+		for i :=range sm{
+			sm[i]=make(map[int]string)
+			sm[i][1]="OK"
+			fmt.Println(sm[i])
+		}
+		fmt.Println(sm)
+	}
+	输出:
+	map[1:OK]
+	map[1:OK]
+	map[1:OK]
+	map[1:OK]
+	map[1:OK]
+	[map[1:OK] map[1:OK] map[1:OK] map[1:OK] map[1:OK]]
+
+列表迭代:
+	func main() {
+		sm:=[]int{1,22,33,4}
+		fmt.Println(sm)
+		for v :=range sm{
+			fmt.Println(v,":",)
+		}
+	}
+	输出:
+	[1 22 33 4]
+	0 :
+	1 :
+	2 :
+	3 :
