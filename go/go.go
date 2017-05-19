@@ -385,3 +385,29 @@ func main() {
 	1 :
 	2 :
 	3 :
+
+列表排序:
+
+		func main()  {
+			m:=map[int]string{5:"a",2:"b",3:"c",4:"d"}
+			s:=make([]int,len(m))
+			i:=0
+			for k,_ :=range m{
+				s[i]=k
+				i++
+			}
+			sort.Ints(s)
+			fmt.Println(s)
+		}
+	输出: 
+		[2 3 4 5]
+
+8.5  key value对调
+		func main()  {
+			m:=map[int]string{5:"a",2:"b",3:"c",4:"d"}
+			m2:=make(map[string]int)
+			for k,v:=range m{
+				m2[v]=k
+			}
+			fmt.Println(m2)
+		}
