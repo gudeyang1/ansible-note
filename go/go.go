@@ -411,3 +411,74 @@ func main() {
 			}
 			fmt.Println(m2)
 		}
+
+
+9. func 函数
+
+9.1 定义
+
+	func A(a int, b string)(int, string)  {
+		
+	}
+
+9.2 不定长变参
+	func main()  {
+
+		A(12,3,4,3,4,3)
+	}
+
+	func A( a... int)  {
+		fmt.Println(a)
+	}
+	输出:
+		[12 3 4 3 4 3]
+
+9.3 如果传递多个参数,不定长变参必须放在最后,
+	func main()  {
+
+		A("csccs",12,3,4,3,4,3)
+	}
+
+	func A( b string, a... int)  {
+		fmt.Println(a,b)
+
+	}
+	输出: 
+		[12 3 4 3 4 3] csccs
+
+9.4 
+	func main()  {
+		s1:= []int{1,2,3,4}
+		fmt.Println(s1)
+		A(s1)
+		fmt.Println(s1)
+	}
+
+	func A(s []int) []int {
+
+		s[0] = 333
+		s[1] = 444
+		return s
+		
+	}
+	输出:
+		[1 2 3 4]
+		[333 444 3 4]
+
+9.5 字符串不会被修改, 需要用指针类型调用
+	func main()  {
+		a := 2
+		fmt.Println(a)
+		A(&a)
+		fmt.Println(a)
+	}
+
+	func A(a *int) int {   // *int 表示指定类型
+		*a =22222
+		return *a
+	}
+	输出:
+		2
+		22222
+
+9.6 
