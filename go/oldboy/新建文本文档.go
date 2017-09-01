@@ -267,3 +267,206 @@
 
 			return result(a,b)   
 		}
+
+16. 中文字符问题
+
+		[]byte(string) 是字节, 一个中文字符占三个字节,
+		[]rune(string) 是字符, 一个字符就是一个字符,不管是中文还是英文
+				func main() {
+
+				str :="laoYu老虞"
+				r := []rune(str)    //中文字符需要转换成rune 类型之后才可以计算
+				fmt.Println("rune=",r)
+				for i:=0;i<len(r) ; i++ {
+				       fmt.Println("r[",i,"]=",r[i],"string=",string(r[i]))
+					fmt.Println(len(string(r[i])))
+				}
+				}
+
+
+		func main() {
+
+			reader := bufio.NewReader(os.Stdin)    //从输入读取的新方式
+			name, _,err :=reader.ReadLine()			//
+			if err != nil{
+				fmt.Println("eror happens")
+			}
+			fmt.Println(name)    // 输出, [115 97 99]   字符的utf-8编码
+			fmt.Printf("%c\n" , name)   // 格式化, 但是中文会失败 [s a c]
+			fmt.Println(string(name))   //  将输入的[]byte 类型转换后才能string 类型   sac
+			t := []rune(string(name))   // 将输入转成字符类型, 尤其针对中文, 注意要将输入的byte类型转换后才能string 作为其参数
+			fmt.Println(t)    // 输出: [115 97 99]
+			
+				for _,v := range t{
+				fmt.Println(string(v))   // 将rune 类型转换成string 即可输出输入 的字符串
+			}
+		}
+		输出:
+		sac   // 输入
+		[115 97 99]
+		[s a c]
+		sac
+		[115 97 99]
+
+
+
+17. 内置函数
+
+	17.1 new
+	new 用来分配内存, 主要用来分配值类型, 比如int, struct ,返回的是指针
+		func main() {
+		var name int
+		fmt.Println(name)
+
+		new_name := new(int)
+		fmt.Println(new_name)   //输出内存地址
+		/*
+		new_name := new(int)
+		*new_name = 12     // 赋值
+		fmt.Println(*new_name)		
+		*/
+		}
+		输出:
+		0
+		0xc042008260    // new 输出的是指针
+	17.2 make
+	make 用来分配内存, 只要用来分配引用类型, 比如chan ,map, slice
+
+	17.3 append
+		var a  []int
+
+		a  = append(a,10,22,34)
+		fmt.Println(a)
+		a = append(a,a...)   // ...表示数组a的展开
+		fmt.Println(a)
+	输出:
+		[10 22 34]
+		[10 22 34 10 22 34]	
+	17.4 panic
+		func test()  {
+			
+			defer func() {     //捕获异常
+				if err := recover()	; err != nil{
+					fmt.Println(err)  //打印报错
+					debug.PrintStack()   //打印堆栈信息, 具体哪行代码出错
+				}
+			}() //()调用匿名函数
+
+			var a int = 0
+			b := 100 /a
+			fmt.Println(b)
+		}
+//////自动触发panic
+		func main() {
+			err := InitConfig()
+			if err != nil{
+				panic(err)
+			}
+
+		}
+
+		func InitConfig()error  {
+			return errors.New("init config error")
+
+		}
+
+
+18. 递归 , 一个函数自己调用自己交递归
+		func main() {
+			recusive(9)
+
+		}
+ 
+		func recusive(n int)  {   // 添加n作为退出死循环条件  
+
+			fmt.Println("hello" )
+			time.Sleep(time.Second)
+			if n > 10{   // 定义出口条件
+				return
+			}
+			recusive(n + 1)
+
+		}
+
+19. 闭包
+		func main() {
+			f:= adder()
+			fmt.Println(f(1))
+			fmt.Println(f(200))
+			fmt.Println(f(100))
+
+		}
+
+		func adder() func(int) int {
+			var x int   //x 的值会保存起来
+			return func(d int)int {
+				x += d
+				return x
+			}
+		}
+	输出:
+		1
+		201
+		301
+
+///////////////////////////////////////////////////
+	func makeSuffix(suffix string)func(string) string  {
+
+		return func(name string) string {
+			if strings.HasSuffix(name,suffix) == false{
+				return name + suffix
+			}
+			return name
+		}
+
+	}
+
+
+	func main() {
+		f1 := makeSuffix(".bmp")
+		fmt.Println(f1("test"))
+
+		f2 := makeSuffix(".jpg")
+		fmt.Println(f2("pic"))
+
+	}
+	输出:
+	test.bmp
+	pic.jpg
+
+20. 数组
+	20.1 定义
+		func main() {
+			var a = [...]int{3:3}   // 数组有长度, slice 没有长度
+			var b = []int32    // 这个是切片
+			fmt.Println(a)
+
+		}
+		//
+		[0 0 0 3]
+
+	20.2 多维数组
+	func main() {
+		var a  = [...][3]int{{1,2,3},{3,4,5}}
+
+		for k,v := range a{
+			for index, value := range v{
+				fmt.Printf("a[%d][%d] = %d", k,index,value)
+				fmt.Println()
+			}
+		}
+
+	}
+	输出:
+	a[0][0] = 1
+	a[0][1] = 2
+	a[0][2] = 3
+	a[1][0] = 3
+	a[1][1] = 4
+	a[1][2] = 5
+
+21. 切片
+	var slice []int   //切片
+	var arr =  [5]int{1,2,3,4,5}   // 数组
+ 	var b [5]int  = [...]int{1,2,3,4,5}   //数组
+ 	var b [5]int  = [5]int{1,2,3,4,5}   //数组
