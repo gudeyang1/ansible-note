@@ -471,171 +471,41 @@
  	var b [5]int  = [...]int{1,2,3,4,5}   //数组
  	var b [5]int  = [5]int{1,2,3,4,5}   //数组
 
+ 22. struct
 
-
- 23. 排序
-
-	23.1 整数排序
+ 22.1 定义
+	type student struct {
+		Name	string
+		Age		int
+		Score	float64
+	}
 	func main() {
-		list := []int{1,2,3,434,65,32,12}   //切片
 
-		sort.Ints(list)   // 需要传递切片
-		fmt.Println(list)
+		var stu  student
+		stu.Age = 10
+		stu.Name = "jim"
+		stu.Score = 65
+
+		fmt.Println(stu)
+		fmt.Printf("name:%p\n", &stu.Name)
+		fmt.Printf("age:%p\n", &stu.Age)
+		fmt.Printf("score:%p\n", &stu.Score)
 	}
 
-	23.2 字符串排序
-	func main() {
-		list := []string{"asa","scsac","sc","a"}
-		sort.Strings(list)
-		fmt.Println(list)
-	}
-
-	23.3 排序搜索
-
-	func main() {
-		list := []int{23,43,12,43}
-		sort.Ints(list)
-		fmt.Println(list)
-		fmt.Println(sort.SearchInts(list, 43))   // 返回索引 2   排序后搜索必须是排好序的切片
-	}
-
-	输出:
-	[12 23 43 43]
-2
-
-24. map
-	24.1 定义
-	func TestMap()  {
-		
-		a := make(map[string]string,10)   // map[key 类型]value 类型
-
-		a["a"] = "21"
-		fmt.Println(a)
-	}
-	输出:
-	map[a:21]
-	// 或者
-	func TestMap()  {
-		a := map[string]string{
-			"a":"1",
-			"b":"2"}
-		fmt.Println(a)
-	}
-
-	24.2 map 嵌套map
-	func TestMap()  {
-		a := make(map[string]map[string]string,10)
-		a["1"] = make(map[string]string)   // 需要对a[1] 的map make 分配内存
-		a["1"]["a"] = "sss"
-		a["1"]["b"] = "ssssss"
-		a["1"]["c"] = "sssssssss"
-		a["1"]["d"] = "sssqqsss"
-		fmt.Println(a)
-	}
-	输出:
-	map[1:map[a:sss b:ssssss c:sssssssss d:sssqqsss]]
-
-	//示例:
-
-	func TestMap()  {
-		a := make(map[string]map[string]string)
-		
-		_,v := a["zhangsan"]
-		if !v{
-			a["zhangsan"] = make(map[string]string)   //如果不存在, 就初始化, 如果存在就更新记录
-
-		}
-		a["zhangsan"]["passowr"] = "123"
-		a["zhangsan"]["nickname"] = "jack"
-		fmt.Println(a)
-	}
-
-25. 包
-线程同步 , 
-build 加上 --race  . go build --race main.go
-
-import sync
- 互斥锁: sync.Mutex   一次只能有一个人干活
- 读写锁: sync.RWMutex  无线读,一个写
-		 var lock sync.Mutex
-		func TestMap()  {
-
-			a := make(map[int]int,4)
-
-			a[1] = 1
-			a[2] = 2
-			a[3] = 3
-			a[4] = 4
-			for i := 0; i < 2 ;i ++{
-				go func(b map[int]int) {
-					lock.Lock()
-					b[1] = rand.Intn(100)
-					lock.Unlock()
-				}(a)
+	////////  或者
+		func main() {
+			var stu student = student{
+				Age: 10,
+				Name: "sc",
 			}
-			lock.Lock()
-			fmt.Println(a)
-			lock.Unlock()
-			time.Sleep(time.Second)
-		}
-		// 读写锁
-		var rwlock sync.RWMutex
-		func TestMap()  {
-
-			a := make(map[int]int,4)
-
-			a[1] = 1
-			a[2] = 2
-			a[3] = 3
-			a[4] = 4
-			for i := 0; i < 2 ;i ++{
-				go func(b map[int]int) { 
-					rwlock.Lock()    // 写锁
-					b[1] = rand.Intn(100)
-					rwlock.Unlock()
-				}(a)
-			}
-			for i := 0; i < 100 ;i ++{
-				go func(b map[int]int) {
-					rwlock.RLock()   //读锁
-					fmt.Println(a)
-					rwlock.RUnlock()
-				}(a)
-			}
-			time.Sleep(time.Second * 3)
-
+			fmt.Println(stu.Name)
 		}
 
+	输出:	
+		{jim 10 65}
+		// struct 是连续内存地址
+		name:0xc042002660
+		age:0xc042002670
+		score:0xc042002678
 
-		测试性能, 3秒内读取次数
-		var lock sync.Mutex
-		var rwlock sync.RWMutex
-		func TestMap()  {
-			var conut int32
-			a := make(map[int]int,4)
 
-			a[1] = 1
-			a[2] = 2
-			a[3] = 3
-			a[4] = 4
-			for i := 0; i < 2 ;i ++{
-				go func(b map[int]int) {
-					rwlock.Lock()
-					b[1] = rand.Intn(100)
-					rwlock.Unlock()
-				}(a)
-			}
-
-			for i := 0; i < 100 ;i ++{
-				go func(b map[int]int) {
-					for  {
-						rwlock.RLock()
-						time.Sleep(time.Millisecond)  //一毫秒
-						rwlock.RUnlock()
-						atomic.AddInt32(&conut,1)   // 原子性操作
-					}
-				}(a)
-			}
-			time.Sleep(time.Second * 3)
-			fmt.Println(atomic.LoadInt32(&conut)) 
-		}
