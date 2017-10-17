@@ -717,10 +717,276 @@ import sync
 				tail.Next = &stu
 				tail = &stu
 
-				trans(&head)
+
 			}
+				trans(&head)
+		}
+
+首部插入
+		package main
+
+		import (
+			"fmt"
+			"math/rand"
+
+		)
+
+		type Student  struct {
+
+			Name   string
+			Age		int
+			Score	float64
+			Next	*Student
+		}
+
+		func trans(p *Student)  {
+			for p != nil {
+				fmt.Println(*p)
+				p = p.Next
+			}
+		}
+
+		func main() {
+			var head  *Student = &Student{}
+			head.Name = "hua"
+			head.Age = 100
+			head.Score = 99
+
+
+			for i:=1; i<10; i++{
+				var stu  = Student{
+					Name: fmt.Sprintf("stu%d",i),
+					Age: rand.Intn(100),
+					Score: rand.Float64() *100,
+				}
+				stu.Next = head
+				head = &stu
+
+			}
+			trans(head)
 
 		}
 
+删除节点
+	package main
 
+	import (
+		"fmt"
+
+		"math/rand"
+	)
+
+	type Student struct {
+		Name string
+		Age	int
+		Score	int
+		Next	*Student
+	}
+
+	func trans(p *Student)  {
+		for p != nil{
+			fmt.Println(*p)
+			p= p.Next
+		}
+	}
+	func deleteNode(p *Student)  {
+
+		var pre *Student  = p
+		for p != nil{
+			if p.Name == "stu6" {
+				pre.Next = p.Next
+				break
+			}
+			pre = p
+			p = p.Next
+		}
+	}
+
+	func main()  {
+
+		var head  Student
+
+		head.Name = "hua"
+		head.Age = 50
+		head.Score = 100
+
+		var p  = &head
+		for i := 0; i< 10; i++{
+			  stu := Student{
+				  Name: fmt.Sprintf("stu%d",i),
+				  Age: rand.Intn(100),
+				  Score:rand.Intn(10),
+			  }
+			p.Next = &stu
+			p = p.Next
+		}
+
+		trans(&head)
+		deleteNode(&head)
+		trans(&head)
+
+	}
+
+插入节点
+		package main
+
+		import (
+			"fmt"
+
+			"math/rand"
+		)
+
+		type Student struct {
+			Name string
+			Age	int
+			Score	int
+			Next	*Student
+		}
+
+		func trans(p *Student)  {
+			for p != nil{
+				fmt.Println(*p)
+				p= p.Next
+			}
+		}
+
+		func InsertNode(p *Student, newNode *Student)  {
+
+			for p != nil{
+				if p.Name == "stu5"{
+					newNode.Next = p.Next
+					p.Next = newNode
+					break
+				}
+				p = p.Next
+			}
+		}
+
+		func main()  {
+
+			var head  Student
+
+			head.Name = "hua"
+			head.Age = 50
+			head.Score = 100
+
+			var stu1000  Student
+			stu1000.Name = "10000000"
+			stu1000.Age = 50
+			stu1000.Score = 100
+
+			var p  = &head
+			for i := 0; i< 10; i++{
+				  stu := Student{
+					  Name: fmt.Sprintf("stu%d",i),
+					  Age: rand.Intn(100),
+					  Score:rand.Intn(10),
+				  }
+				p.Next = &stu
+				p = p.Next
+			}
+
+			//trans(&head)
+			InsertNode(&head,&stu1000)
+			trans(&head)
+		}
+
+25.3. 二叉树
+
+	26.1 定义
+		package main
+
+		import "fmt"
+
+		type Student struct {
+			Name	string
+			left	*Student
+			right	*Student
+		}
+
+		func trans(p *Student)  {
+
+			if p == nil{
+				return
+			}
+			fmt.Println(p)
+			trans(p.left)
+			trans(p.right)
+		}
+
+		func main()  {
+
+			var root *Student  = new(Student)
+			root.Name = "stu1"
+
+			var left1 *Student  = new(Student)
+			left1.Name = "stu2"
+
+			var right1 *Student  = new(Student)
+			right1.Name = "stu3"
+
+			var left2 *Student  = new(Student)
+			left2.Name = "stu4"
+
+			root.left = left1
+			root.right = right1
+			left1.left = left2
+
+			trans(root)
+		}
+
+25.4 struct 的tag
+	package main
+
+	import (
+		"encoding/json"
+		"fmt"
+	)
+
+	type Student struct {
+		Name  string `json:"name"`   // ``里面的就是tag
+		Age 	int		`json:"age"`
+		Score 	int		`json:"score"`
+
+	}
+
+	func main()  {
+		var stu Student = Student{
+			Name:"stud01",
+			Age:18,
+			Score:80,
+		}
+		date, err := json.Marshal(stu)  //打包
+		if err != nil{
+			fmt.Println("error")
+		}
+		fmt.Println(string(date))
+	}
+
+25.5 匿名字段
+	package  main
+
+	import (
+		"time"
+		"fmt"
+	)
+
+	type Car struct {
+		name   	string
+	}
+
+	type Train	struct {
+		Car
+		start  	time.Time
+		int
+	}
+
+	func main()  {
+		var t *Train  =  new(Train)
+
+		t.name = "train"
+		t.int = 100
+
+		fmt.Println(*t)
+	}
 
