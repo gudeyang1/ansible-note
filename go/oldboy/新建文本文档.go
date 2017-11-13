@@ -990,3 +990,92 @@ import sync
 		fmt.Println(*t)
 	}
 
+25.6 struct 方法
+	定义:
+	func (revice struct) func_name(参数列表) 返回值 {
+		
+	}
+
+///////////////////
+		package main
+
+		import "fmt"
+
+		type Student struct {
+			Name 	string
+			Age		int
+		}
+
+		func (p *Student) int(name string , age int)  {
+			p.Name = name
+			p.Age = age
+			fmt.Println(*p)
+		}
+		func (a Student) get() Student  {
+			return a
+		}
+
+
+		func main()  {
+
+			var stu Student
+			stu.int("jim",10)
+
+			std := stu.get()
+			fmt.Println(std)
+		}
+
+26. interface
+
+26.1 定义
+		package main
+
+		import "fmt"
+
+		type Student strct {
+			name 	string
+			age		int
+		}
+
+		type Test interface {
+			print()
+			//struct 必须实现这个print 方法
+		}
+
+//print 的实现
+		func (p Student) print()  {
+			fmt.Println("name:", p.name)
+			fmt.Println("age:",p.age)
+		}
+
+		func main()  {
+
+			var stu Student = Student{
+				name: "jim",
+				age: 50,
+			}
+			var t Test
+			t=stu
+			t.print()
+
+		}
+
+
+26.2
+	package main
+
+	import "fmt"
+
+	type Text interface {
+
+	}
+
+	func main()  {
+
+		var a Text // a 是个空接口
+		var b int
+		a =  b  // 空接口可是任何类型
+		fmt.Printf("type of a is %T",a)  // %T 显示数据类型
+
+		}
+
