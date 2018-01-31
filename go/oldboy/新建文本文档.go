@@ -43,6 +43,14 @@
 	var b int32 = int32(a)  //将a 转换成int32 类型
 	int8 int32 虽然都是整数类型,但是不是同一种类型, 不能做运算
 
+byte:
+	func main()  {
+		var a byte = 'a' // byte 只能用单引号,
+		fmt.Println(a)
+
+		fmt.Printf("%c",a)  // %c 格式化输出      
+	}
+
 4. 生成随机数
 	func main()  {
 		rand.Seed(time.Now().Unix())  // 获取当前秒时间
@@ -210,7 +218,18 @@
 			}
 			return sum
 		}
+/////////////////////////
 
+		func add(a int, arg ... int)int  {
+			sum := a
+			for i :=0; i< len(arg); i++{
+				sum += arg[i]
+			}
+			return sum
+		}
+		func main() {
+			fmt.Println(add(100,200))
+		}
 14.  defer
 	defer 是先进后出
 
@@ -391,7 +410,7 @@
 19. 闭包
 		func main() {
 			f:= adder()
-			fmt.Println(f(1))
+			fmt.Println(f(1))2
 			fmt.Println(f(200))
 			fmt.Println(f(100))
 
@@ -537,7 +556,7 @@
 	func TestMap()  {
 		a := make(map[string]map[string]string)
 		
-		_,v := a["zhangsan"]
+		_,v := a["zhangsan"] // _返回a["zhangsan"]的值,v 为true or false
 		if !v{
 			a["zhangsan"] = make(map[string]string)   //如果不存在, 就初始化, 如果存在就更新记录
 
@@ -641,6 +660,12 @@ import sync
 25. struct
 
  25.1 定义
+
+ 三种形式:
+
+ var stu Student 
+ var stu *Student = new(Student)  //指针类型
+ var stu *Student = &Student{}   //指针类型
 	type student struct {
 		Name	string
 		Age		int
@@ -703,7 +728,7 @@ import sync
 			var head  Student
 			head.Name = "hua"
 			head.Age = 100
-			head.Score = 99
+			head.Score = 99 
 
 			var tail = &head
 			for i := 1; i<=10; i++{
@@ -908,7 +933,7 @@ import sync
 
 			if p == nil{
 				return
-			}
+			} 
 			fmt.Println(p)
 			trans(p.left)
 			trans(p.right)
@@ -946,7 +971,7 @@ import sync
 	type Student struct {
 		Name  string `json:"name"`   // ``里面的就是tag
 		Age 	int		`json:"age"`
-		Score 	int		`json:"score"`
+		Score 	int		`json:"score"` 
 
 	}
 
@@ -1017,7 +1042,7 @@ import sync
 
 
 		func main()  {
-
+ 
 			var stu Student
 			stu.int("jim",10)
 
