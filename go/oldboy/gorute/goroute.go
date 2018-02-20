@@ -37,7 +37,7 @@
 			var sum int
 			sum = 1
 			for i := 1; i<t.n; i++{
-				sum *=i
+				sum *=i  //计算阶乘
 			}
 			lock.Lock()
 			m[t.n] = sum
@@ -73,7 +73,7 @@ var test chan map[string]string
 		func main()  {
 
 			var test chan int
-			test = make(chan int,10)  // 需要make 初始化, 10 是cap
+			test = make(chan int,10)  // 需要make 初始化, 10 是元素个数
 			test <- 10  // 写入channel
 			a := <- test  // 从channel 读取
 			fmt.Println(a)
@@ -113,5 +113,307 @@ var test chan map[string]string
 			 	fmt.Println("convert interface{} to struct failed")
 			 }
 			 fmt.Println(stu02)
+
+		}
+
+///////////////
+channel 与goroute 简单配合示例
+		package main
+
+		import (
+			"fmt"
+			"time"
+		)
+	//写入0-9到channel
+		func Write(ch chan int)  {
+			for i:= 0 ;i<10; i++{
+				ch <- i
+			}
+		}
+	// 读取channel内容
+		func Read(ch chan int)  {
+		for {
+			a := <- ch
+			fmt.Println(a)
+		}
+		}
+
+		func main()  {
+			testChan := make(chan int)
+			go Write(testChan)
+			go Read(testChan)
+			time.Sleep(time.Second )
+		}
+2.2.2 channel 阻塞
+		package main
+
+		import (
+			"fmt"
+			"time"
+		)
+
+		func Write(ch chan int)  {
+			for i:= 0 ;i<10; i++{
+				ch <- i
+				fmt.Println(i)
+			}
+		}
+		func Read(ch chan int)  {
+		for {
+			a := <- ch
+			fmt.Println(a)
+		}
+		}
+
+		func main()  {
+			testChan := make(chan int,5)  //定义了channel的长度,会迅速写入5个进去,但是没有从channel里面读取,所有channel会阻塞,
+			go Write(testChan)
+			//go Read(testChan)
+			time.Sleep(time.Second *10 )
+		}
+
+////////////////////////
+判断100以为质数
+		package main
+
+		import (
+			"fmt"
+			"time"
+		)
+
+		func cacl(sourceChan chan int, resultChan chan int)  {
+			for v:= range sourceChan{  //遍历channel内容
+				flag := true
+				for i :=2; i<v; i++{  // 判断是否为质数
+					if v%i == 0{
+						flag = false  //给质数打上flag
+						break
+					}
+				}
+				if flag{  //将质数写入result channel
+					resultChan <- v
+				}
+			}
+		}
+
+		func main()  {
+			intChan := make(chan int,100)
+			resultChan := make(chan int,100)
+			// 将1-100所有数塞入管道
+			for i := 0 ; i<100; i ++{
+				intChan <- i
+			}
+			//4核cpu 跑4个goroute
+			for i:=0;i<4;i++{
+				go cacl(intChan,resultChan)
+			}
+			//读取resultChannel 质数
+			for i:= range resultChan{
+				//i =<- resultChan
+				fmt.Println(i)
+			}
+			time.Sleep(time.Second *10)
+		}
+
+//////////或者
+		package main
+
+		import (
+			"fmt"
+			"time"
+		)
+
+		func cacl(sourceChan chan int, resultChan chan int)  {
+			for v:= range sourceChan{  //遍历channel内容
+				flag := true
+				for i :=2; i<v; i++{  // 判断是否为质数
+					if v%i == 0{
+						flag = false  //给质数打上flag
+						break
+					}
+				}
+				if flag{  //将质数写入result channel
+					resultChan <- v
+				}
+			}
+		}
+
+		func main()  {
+			intChan := make(chan int,100)
+			resultChan := make(chan int,100)
+			// 将1000000所有数塞入管道,每次读取4个,读完之后动态塞入剩下的数
+			go func() {
+				for i := 0 ; i<10000000; i ++{
+					intChan <- i
+				}
+				close(intChan)
+			}()
+
+			//4核cpu 跑4个goroute
+			for i:=0;i<4;i++{
+				go cacl(intChan,resultChan)
+			}
+			//读取resultChannel 质数
+			for i:= range resultChan{
+				//i =<- resultChan
+				fmt.Println(i)
+			}
+			time.Sleep(time.Second *10)
+		}
+///////
+不使用sleep 退出channel
+
+		package main
+
+		import (
+			"fmt"
+
+		)
+
+		func cacl(sourceChan chan int, resultChan chan int,exitChan chan bool)  {
+			for v:= range sourceChan{  //遍历channel内容
+				flag := true
+				for i :=2; i<v; i++{  // 判断是否为质数
+					if v%i == 0{
+						flag = false  //给质数打上flag
+						break
+					}
+				}
+				if flag{  //将质数写入result channel
+					resultChan <- v
+				}
+			}
+			exitChan <- true
+		}
+
+		func main()  {
+			intChan := make(chan int,100)
+			resultChan := make(chan int,100)
+			exitChan := make(chan bool,4)
+			// 将1000000所有数塞入管道,每次读取4个,读完之后动态塞入剩下的数
+			go func() {
+				for i := 0 ; i<200; i ++{
+					intChan <- i
+				}
+				close(intChan)
+			}()
+
+			//4核cpu 跑4个goroute
+			for i:=0;i<4;i++{
+				go cacl(intChan,resultChan,exitChan)
+			}
+			//添加exitchannel ,当协程干完活,会在exitChannel 里面写入"true",当写入满4个时关闭resultChannel,
+			go func() {
+				for i :=0;i<4 ;i++{
+					<- exitChan
+				}
+				close(resultChan) // 关闭之后, for range 不会阻塞
+			}()
+
+			for i:= range resultChan{
+				fmt.Println(i)
+			}
+
+		}
+
+
+2.2.3 关闭channel
+
+		package main
+
+		import ("fmt")
+		func main()  {
+
+			ch := make(chan int,3)
+
+			for i:= 0; i<3 ;i++{
+				ch <- i
+			}
+			close(ch)
+
+			for {
+				b,ok := <- ch
+				if ok == false{
+					fmt.Println("channel closed")
+					break
+				}
+				fmt.Println(b)
+			}
+		}
+	输出:
+		0
+		1
+		2
+		channel closed
+
+		///for range channel
+		package main
+
+		import (
+
+			"fmt"
+
+		)
+
+		func main()  {
+
+			ch := make(chan int,3)
+
+			for i:= 0; i<3 ;i++{
+				ch <- i
+			}
+			close(ch)  // 如果不关闭管道,for range 时会阻塞
+			//for {
+			//	b,ok := <- ch
+			//	if ok == false{
+			//		fmt.Println("channel closed")
+			//		break
+			//	}
+			//	fmt.Println(b)
+			//}
+			for v := range ch{
+				fmt.Println(v)
+			}
+		}
+
+
+////////
+示例:
+		package main
+
+		import (
+			"fmt"
+		)
+
+		func send(ch chan int,exitChan chan bool)  {
+
+			for i :=0;i<10;i ++{
+				ch <- i
+			}
+			close(ch)
+			exitChan <- true
+		}
+
+		func revice(ch chan int,exitChan chan bool)  {
+			for {
+				v,ok:= <- ch
+				if !ok {
+					break
+				}
+				fmt.Println(v)
+			}
+			exitChan <- true
+		}
+
+		func main()  {
+
+			ch := make(chan int,10)
+			exitCh:= make(chan bool,2)  // send recive 两个协程跑完之后在exitChan做标记
+			go send(ch,exitCh)
+			go revice(ch,exitCh)
+			// 主程序需要等待 exitchannel 显示sent recive 两个协程跑完毕
+			for i:=0;i<2;i++{
+				<- exitCh
+			}
 
 		}
