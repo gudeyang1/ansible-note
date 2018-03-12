@@ -567,7 +567,7 @@ byte:
 	}
 
 25. 包
-线程同步 , 
+线程同步 , 查看程序是否有资源竞争
 build 加上 --race  . go build --race main.go
 
 import sync
