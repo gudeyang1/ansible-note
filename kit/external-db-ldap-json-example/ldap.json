@@ -1,0 +1,32 @@
+{
+    "ldap_server_ip": "16.155.198.1",
+    "ldap_server_port": "389",
+    "ldap_use_ssl": "false",
+    "ldap_search_sub": "true",
+    "ldap_base_dn": "DC=adfs,DC=com",
+    "ldap_bind_user": "CN=admin,CN=Users,DC=adfs,DC=com",
+    "ldap_bind_user_password": "1Qaz2wsx3edc",
+    "ldap_user_base_dn": "CN=Users,DC=adfs,DC=com",
+   "ldap_user_class": "person",
+    "ldap_user_filter": "(&(objectclass=person)(userPrincipalName=*))",
+    "ldap_user_firstname": "givenName",
+    "ldap_user_lastname": "sn",
+    "ldap_user_disp_name_attr": "sAMAccountName",
+    "ldap_user_name_attr": "sAMAccountName",
+    "ldap_user_email": "mail",
+    "ldap_user_avatar": "",
+    "ldap_user_manager_id": "",
+    "ldap_user_manager_id_value": "",
+    "ldap_user_phone": "telephoneNumber",
+    "ldap_user_lastmodified": "whenChanged",
+    "ldap_group_base_dn": "CN=Users,DC=adfs,DC=com",
+    "ldap_group_class": "group",
+    "ldap_group_base_filter": "(objectclass=group)",
+    "ldap_group_name_attr": "cn",
+    "ldap_group_member_attr": "member",
+   "ldap_user_group": "CN=Users,DC=adfs,DC=com",
+    "ldap_admin_group": "CN=admin,CN=Users,DC=adfs,DC=com"
+}
+
+
+

@@ -1,0 +1,105 @@
+- name: get backup namespace
+  shell: kubectl get namespace  |grep itsma |awk '{print $1}'
+  register: namespace_output
+- set_fact: current_namespace={{namespace_output.stdout}}
+
+- name: get token
+  uri:
+    url: https://{{ ansible_fqdn|lower }}:3000/apiserver/urest/v1.1/cdf/token
+    method: POST
+    headers: "{{ token_headers }}"
+    return_content: yes
+    status_code: 200
+    body: "{{ token_body }}"
+    body_format: json
+    timeout: 180
+    validate_certs: no
+  register: token
+
+- uri:
+    url: https://{{ ansible_fqdn|lower }}:3000/apiserver/urest/v1.1/deployment?deploymentStatus=INSTALL_FINISHED
+    method: GET
+    headers: "{{get_uuid_headers}}"
+    return_content: yes
+    status_code: 200
+    body_format: json
+    timeout: 180
+    validate_certs: no
+  register: uuid
+
+- name: start upgrade image
+  uri:
+    url: https://{{ ansible_fqdn|lower }}:3000/apiserver/urest/v1.1/deployment/{{uuid.json[-1].deploymentUuid}}/startUpgradeImages
+    method: GET
+    headers: "{{csrf_headers}}"
+    return_content: yes
+    status_code: 200
+    body_format: json
+    timeout: 180
+    validate_certs: no
+- name: wait for service itom-itsma-upgrade-svc created
+  shell: >
+    kubectl get svc --namespace={{current_namespace}} suite-upgrade-svc-itsma
+  ignore_errors: True
+  register: get_svc_result
+  until: get_svc_result.rc == 0
+  retries: 30
+  delay: 10
+
+
+- name: open nodeport 31009 for suiet update pod
+  shell: >
+    kubectl  get svc --namespace={{current_namespace}} suite-upgrade-svc-itsma  -o yaml |sed  's/type: ClusterIP/type: NodePort/' |sed '/^.*targetPort: 8081/a\\    nodePort: 31009' |kubectl replace -f -
+- name: use suite-update image from harbor to replace localhost
+  shell: >
+    kubectl set image --namespace={{current_namespace}} pods suite-upgrade-pod-itsma suite-config="shc-harbor-dev.hpeswlab.net/itsma/itom-itsma-update:{{upgrade_tag}}"
+
+- name: get upgrade image start result
+  uri:
+    url: http://{{ ansible_fqdn|lower }}:31009/itsma/deployer/status
+    method: GET
+    status_code: 200
+  register: result
+  until: result.status == 200
+  retries: 50
+  delay: 10
+- name: sleep 60s
+  wait_for: timeout=60
+
+- name: wait for service itom-itsma-backup-svc created
+  shell: >
+    kubectl get svc --namespace={{current_namespace}} itom-itsma-backup-svc
+  ignore_errors: True
+  register: get_svc_result
+  until: get_svc_result.rc == 0
+  retries: 30
+  delay: 10
+
+
+- name: open nodeport 31988 for suite backuup svc
+  shell: >
+    kubectl  get svc --namespace={{current_namespace}} itom-itsma-backup-svc  -o yaml |sed  's/type: ClusterIP/type: NodePort/' |sed '/^.*targetPort: 8081/a\\    nodePort: 31988' |kubectl replace -f -
+- name: wait until backup api is ready for new backup
+  uri:
+    url: http://{{ ansible_fqdn|lower }}:31988/suitebackup/backup
+    method: GET
+    status_code: 200
+  register: current_backup_status
+#  until: current_backup_status.json.backupStatus != "BACKUPING"
+  until: current_backup_status.status == 200 
+  retries: 20
+  delay: 10
+
+- name: upgrade all service
+  uri:
+    url: http://{{ansible_fqdn|lower}}:31009/itsma/update
+#    body: "{{suite_update_body}}"
+    method: POST
+    status_code: 201
+#    body_format: json
+    timeout: 5000
+    validate_certs: no
+
+- name: end play
+  meta: end_play
+

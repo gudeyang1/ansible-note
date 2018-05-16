@@ -1,0 +1,35 @@
+---
+# tasks file for deploy-suite
+- name: get backupservice  status code
+  uri:
+    url: http://{{ ansible_fqdn|lower }}:31988/health
+    method: GET
+    status_code: 200
+  register: result
+  until: result.status == 200
+  retries: 30
+  delay: 10
+  when: install_type == "install_from_backup"
+
+- name: deploy suite service
+  uri:
+    url: http://{{ ansible_fqdn|lower }}:31008/itsma/install
+    method: POST
+    status_code: 201
+    body: "{{ install_post_body }}"
+    body_format: json
+    timeout: 5000
+    validate_certs: no
+- file: state=directory dest={{global_nfs_expose}}/jdbc/ owner=1999 group=1999
+- name: download jdbc.jar
+  get_url:
+    url: "{{jdbc_url}}"
+    dest: "{{item}}"
+    timeout: 30
+    checksum: md5:{{jdbc_md5}}
+    owner: 1999
+    group: 1999
+  with_items:
+    - "{{suite_config_template_path}}/output/ojdbc.jar"
+    - "{{global_nfs_expose}}/jdbc/ojdbc.jar"
+

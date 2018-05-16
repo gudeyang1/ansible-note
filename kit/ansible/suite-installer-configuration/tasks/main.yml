@@ -1,0 +1,73 @@
+---
+#- shell: >
+#    cd /opt/kubernetes/scripts &&
+#    ./downloadimages.sh -s itsma -r shc-harbor-dev.hpeswlab.net/  -u {{SuiteDataImageTag}} -p 1Qaz2wsx  -y  -l  -T dev &&
+#    ./uploadimages.sh -d /var/opt/kubernetes/offline/ -s itsma &&
+#    sed -i.bck '/"image"/d' /var/vols/itom/core/suite-install/suite_feature/itsma/{{suite_version}}/itsma_suitefeatures.{{suite_version}}.json && 
+#- replace: dest=/var/vols/itom/core/suite-install/itsma/suite_config_template.yaml regexp='\$IMAGE_NAME' replace='{{ installer_registry }}{{':'}}{{ installer_tag }}'
+#- replace: dest=/var/vols/itom/core/suite-install/itsma/suite_config_template.yaml regexp='#type:\sNodePort' replace="type{{':'}} NodePort"
+#- lineinfile:
+#    dest: /var/vols/itom/core/suite-install/itsma/suite_config_template.yaml 
+#    state: present
+#    insertafter: '    targetPort: 8081'
+#    line: '    nodePort: 31008'
+
+#- name: Hack the credentials for private registry
+#  blockinfile:
+#    dest: /var/vols/itom/core/suite-install/itsma/suite_config_template.yaml
+#    insertbefore: BOF
+#    marker: "# {mark} REGISTRY SECRET"
+#    content: |
+#      apiVersion: v1
+#      kind: Secret
+#      metadata:
+#        name: registrypullsecret
+#        namespace: core
+#      data:
+#        .dockerconfigjson: ewoJImF1dGhzIjogewoJCSJkb2NrZXIuaG9zLmhwZWNvcnAubmV0IjogewoJCQkiYXV0aCI6ICJaR1Y1WVc1bkxtZDFRR2h3WlM1amIyMDZXWFYzWldrNU1EazJjV2wxTGc9PSIsCgkJCSJlbWFpbCI6ICJkZXlhbmcuZ3VAaHBlLmNvbSIKCQl9LAoJCSJzaGMtbmV4dXMtcmVwby5ocGVzd2xhYi5uZXQ6OTAwMCI6IHsKCQkJImF1dGgiOiAiWkdWMk9tUmxkZz09IiwKCQkJImVtYWlsIjogImRleWFuZy5ndUBocGUuY29tIgoJCX0KCX0KfQ==
+#      type: kubernetes.io/dockerconfigjson
+#      ---
+
+
+# delete {"images:" "xxxx"} in 2017.11.001
+# delete {
+#	"images": "xxxx"
+#	} in 2018.02
+#delete the line before match line
+#sed -i -e :a -e '$!N;s/.*\n\(.*"image":.*\)/\1/;ta' -e 'P;D' itsma_suitefeatures.2018.02.json
+#delete match line and the after line
+#sed -i  '/"image":/,+1d' itsma_suitefeatures.2018.02.json
+#- name: delete image list in feature.json
+#  shell: >
+#    cd /var/vols/itom/core/suite-install &&
+#    for i in `ls ./suite_feature/itsma/ `; do cat ./suite_feature/itsma/$i/itsma_suitefeatures.$i.json |jq '.images = [{"image": "heapster:v1.5.0"}]' |jq '.feature_sets[].images = [{"image": "heapster:v1.5.0"}]' > tmp.$$.json && mv -f tmp.$$.json ./suite_feature/itsma/$i/itsma_suitefeatures.$i.json; done
+
+- name: replace  deployer image name in suiteinfo.json 
+  shell: >
+    sed -ri 's#(.*image":\s{0,}").*(",)#\1{{ installer_registry }}:{{ installer_tag }}\2#g' /var/vols/itom/core/suite-install/suiteinfo.json
+- file: state=directory dest={{suite_config_template_path}}/output/ca-trust/ owner=itsma group=itsma
+- file: state=directory dest={{global_nfs_expose}}/jdbc/ owner=itsma group=itsma
+- file: state=directory dest={{global_nfs_expose}}/certificate/source/ owner=itsma group=itsma
+- name: download jdbc.jar
+  get_url:
+    url: "{{jdbc_url}}"
+    dest: "{{item}}" 
+    timeout: 30
+    checksum: md5:{{jdbc_md5}}
+    owner: itsma
+    group: itsma
+  with_items:
+    - "{{suite_config_template_path}}/output/ojdbc.jar"
+    - "{{global_nfs_expose}}/jdbc/ojdbc.jar"
+
+- name: download external-ldapserver-ca.crt 
+  get_url:
+    url: "{{external_ldapserver_url}}"
+    dest: "{{item}}"
+    timeout: 30
+    owner: itsma
+    group: itsma
+  with_items:
+    - "{{suite_config_template_path}}/output/ca-trust/external-ldapserver-ca.crt"
+    - "{{global_nfs_expose}}/certificate/source/external-ldapserver-ca.crt"
+

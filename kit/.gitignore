@@ -1,0 +1,23 @@
+*.class
+
+# Mobile Tools for Java (J2ME)
+.mtj.tmp/
+suitectl-conf.yaml
+# Package Files #
+*.jar
+*.war
+*.ear
+*.log
+
+.vagrant
+*.retry
+suitectl
+suitectl.exe
+host
+test
+vmmap.yml
+# virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
+hs_err_pid*
+
+# pycharm file
+.idea/*

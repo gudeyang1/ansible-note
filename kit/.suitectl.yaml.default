@@ -1,0 +1,19 @@
+commands:
+  deploy:
+    #master: "xxx.xxx.xxx.xxx"
+    #nodes: "xxx.xxx.xxx.xxx xxx.xxx.xxx.xxx"
+    #services: "itom-sm itom-saw"
+    #registryUrls: "shc-harbor-dev.hpeswlab.net/itsma shc-harbor-dev.hpeswlab.net/saw"
+    #controllerImgTags: "1.0.2-beta.1 1.0.2.beta.2"
+    #deployerRegistry: "shc-harbor-dev.hpeswlab.net/itsma"
+    #deployerImgTag: "170623"
+    #ItomSuiteSize: "demo"
+    #BackupPackageDir: ""
+    #BackupPackageName: ""
+    #InstallType: "1"
+  list:
+    servicesVersionInfoLocation: "https://raw.github.houston.softwaregrp.net/de-yang-gu/suite-deployer/pg-ha-svc/docker/profiles/ci/itsmaProducts.json"
+
+
+
+

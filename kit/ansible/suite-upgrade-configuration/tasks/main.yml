@@ -1,0 +1,73 @@
+---
+#get suite version 
+- name: get token
+  uri:
+    url: https://{{ ansible_fqdn|lower }}:3000/apiserver/urest/v1.1/cdf/token
+    method: POST
+    headers: "{{ token_headers }}"
+    return_content: yes
+    status_code: 200
+    body: "{{ token_body }}"
+    body_format: json
+    timeout: 180
+    validate_certs: no
+  register: token
+
+- name: get INSTALL_FINISHED suite deployment uuid
+  uri:
+    url: https://{{ ansible_fqdn|lower }}:3000/apiserver/urest/v1.1/deployment?deploymentStatus=INSTALL_FINISHED
+    method: GET
+    headers: "{{get_uuid_headers}}"
+    return_content: yes
+    status_code: 200
+    body_format: json
+    timeout: 180
+    validate_certs: no
+  register: uuid
+- debug: msg="infra-deployment-uuid {{ uuid.json }}"
+
+# set the new version will update to, all suite version can update to that version ,so delete when jugement
+- set_fact: upgrated_version="2018.05"
+#  when: uuid.json[-1].version == "2017.11"
+
+- set_fact: suite_namespace_from_api={{uuid.json[-1].namespace}}
+- debug: msg="Current version is {{uuid.json[-1].version}} , will upgrade to {{upgrated_version}}"
+
+
+- name: get current namespace
+  shell: kubectl get namespace  |grep itsma |awk '{print $1}'
+  register: namespace_output
+- set_fact: current_namespace={{namespace_output.stdout}}
+- fail: msg="namespace error , please make sure suite status is INSTALL_FINISHED not SUITE_INSTALL"
+  when: current_namespace != suite_namespace_from_api
+
+- name: generate deployments.json
+  copy:
+    dest: /var/vols/itom/core/suite-install/deployments.json
+    owner: itsma
+    group: itsma
+    content: |
+      {
+        "registry_orgname": "itsma",
+        "deployments": [
+          {
+            "guid": "59f86d1c-f18b-42ed-bfc0-118f7233cd9a",
+            "namespace": "{{current_namespace}}",
+            "suites": [
+              {
+                "suite": "itsma",
+                "version": "{{uuid.json[-1].version}}",
+                "base_version": "2018.05"
+              }
+            ]
+          }
+        ],
+        "updates": [
+          {
+            "update_version": "{{upgrated_version}}"
+          }
+        ]
+      }
+
+
+

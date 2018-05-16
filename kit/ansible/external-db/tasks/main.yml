@@ -1,0 +1,27 @@
+---
+# tasks file for external-db-ldap
+- name: external DB verfication
+  uri:
+    url: http://{{ ansible_fqdn|lower }}:31008/itsma/verification/database
+    return_content: yes
+    method: POST
+    body: "{{ ExternalDBJsonContent }}"
+    body_format: json
+    timeout: 5000
+    validate_certs: no
+    status_code: 200
+  register: db_verfication_result
+  when: ExternalDBJsonContent != ""
+#return centent is not standard json
+- set_fact: json_result={{db_verfication_result.content|from_json}}
+#get all return code
+- set_fact: database_return_code={{json_result|json_query('*.code')}}
+- debug: msg="error code is {{database_return_code}}"
+- fail: 
+    msg: "{{db_verfication_result.content|from_json}}"
+  when: "'400' in database_return_code"
+
+#generate deployer body from external db json
+- set_fact: deployer_db_array0={{ExternalDBJsonContent|from_json}}
+- set_fact: deployer_db_array={{deployer_db_array0.database}}
+- debug: msg="deployer db array body :{{deployer_db_array}}"

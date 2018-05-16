@@ -1,0 +1,146 @@
+{
+	"allowWorkerOnMaster": true,
+	"masterNodes": [],
+{%for master_host in groups['master']%}
+
+	"workerNodes": [
+	{% for host in groups['nodes'] %}{%if host == master_host%}{%else%}
+	{
+            "hostname": "{{host}}",
+            "user": "root",
+            "password": "iso*help",
+	    "skipWarning":false,
+	    "privateKey": "",
+            "type": "default",
+	{% if thinpool == "true" %}
+	    "thinpoolDevice": "/dev/mapper/docker-thinpool,/dev/mapper/docker--bootstrap-thinpool",
+	{%else%}
+	    "thinpoolDevice": "",
+	{%endif%}
+	    "flannelIface": "",
+	    "skipResourceCheck": true
+	}{% if not loop.last %},{% endif %}
+		{%endif%}
+	{% endfor %}
+{%endfor%}
+    ],
+	"licenseAgreement": {
+		"eula": true,
+		"callHome": false
+	},
+	"connection": {
+		"externalHostname": "{{ansible_fqdn}}",
+		"port": "443"
+	},
+	"volumes": [{
+			"type": "NFS",
+			"name": "global-volume",
+			"host": "{{ansible_fqdn}}",
+			"path": "{{global_nfs_expose}}"
+		},
+		{
+			"type": "NFS",
+			"name": "db-volume",
+			"host": "{{ansible_fqdn}}",
+			"path": "{{db_nfs_expose}}"
+		},
+                {
+                        "type": "NFS",
+                        "name": "db-volume-1",
+                        "host": "{{ansible_fqdn}}",
+                        "path": "{{db_nfs_expose1}}"
+                },
+                {
+                        "type": "NFS",
+                        "name": "db-volume-2",
+                        "host": "{{ansible_fqdn}}",
+                        "path": "{{db_nfs_expose2}}"
+                },
+
+		{
+			"type": "NFS",
+			"name": "smartanalytics-volume",
+			"host": "{{ansible_fqdn}}",
+			"path": "{{smartanalytics_nfs_expose}}"
+		},
+		{
+			"type": "NFS",
+			"name": "itom-vol-claim",
+			"host": "{{ansible_fqdn}}",
+			"path": "/var/vols/itom/core"
+		},
+		{
+			"type": "NFS",
+			"name": "db-single-vol",
+			"host": "{{ansible_fqdn}}",
+			"path": "/var/vols/itom/dbsingle"
+		},
+                {
+                        "type": "NFS",
+                        "name": "db-backup-vol",
+                        "host": "{{ansible_fqdn}}",
+                        "path": "{{cdf_db_backup_nfs_expose}}"
+                },
+		{
+			"type": "NFS",
+			"name": "rabbitmq-pro-rabbitmq-0",
+			"host": "{{ansible_fqdn}}",
+			"path": "{{propel_rabbitmq_0_nfs_expose}}"
+		},
+		{
+			"type": "NFS",
+			"name": "rabbitmq-pro-rabbitmq-1",
+			"host": "{{ansible_fqdn}}",
+			"path": "{{propel_rabbitmq_1_nfs_expose}}"
+		},
+		{
+			"type": "NFS",
+			"name": "rabbitmq-pro-rabbitmq-2",
+			"host": "{{ansible_fqdn}}",
+			"path": "{{propel_rabbitmq_2_nfs_expose}}"
+		},
+		{
+			"type": "NFS",
+			"name": "rabbitmq-infra-rabbitmq-0",
+			"host": "{{ansible_fqdn}}",
+			"path": "{{rabbitmq_infra_rabbitmq_0_expose}}"
+		},
+		{
+			"type": "NFS",
+			"name": "rabbitmq-infra-rabbitmq-1",
+			"host": "{{ansible_fqdn}}",
+			"path": "{{rabbitmq_infra_rabbitmq_1_expose}}"
+		},
+		{
+			"type": "NFS",
+			"name": "rabbitmq-infra-rabbitmq-2",
+			"host": "{{ansible_fqdn}}",
+			"path": "{{rabbitmq_infra_rabbitmq_2_expose}}"
+		}
+	],
+	"database": {
+		"type": "intpostgres",
+		"param": {
+			"highAvailability": false
+		}
+	},
+	"capabilities": {
+		"version": "{{suite_version_to_install}}",
+		"suite": "itsma",
+		"installSize": "SMALL",
+		"edition": "EXPRESS",
+		"capabilitySelection": [{
+				"name": "XSP"
+			},
+			{
+				"name": "SM"
+			},
+			{
+				"name": "CMS"
+			}
+		],
+		"configuration": [{
+			}
+		]
+	}
+}

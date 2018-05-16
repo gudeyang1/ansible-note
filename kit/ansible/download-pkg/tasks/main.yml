@@ -1,0 +1,29 @@
+---
+# tasks file for download-pkg
+- file: state=directory dest={{global_nfs_expose}}/oci/ owner=1999 group=1999
+- name: download oracle client
+  get_url:
+    url: "{{item}}"
+    dest: "{{global_nfs_expose}}/oci/"
+    timeout: 30
+    owner: 1999
+    group: 1999
+  with_items:
+    - "{{instantclient_basic_linux_url}}"
+    - "{{instantclient_sqlplus_linux_url}}"
+
+- file: state=directory dest={{global_nfs_expose}}/certificate/source/ owner=itsma group=itsma
+- name: download external-ldapserver-ca.crt
+  get_url:
+    url: "{{external_ldapserver_url}}"
+    dest: "{{item}}"
+    timeout: 30
+    owner: itsma
+    group: itsma
+  with_items:
+    - "{{global_nfs_expose}}/certificate/source/external-ldapserver-ca.crt"
+
+
+- name: cluster info
+  debug: msg="master fqdn is http://{{ ansible_fqdn|lower }}"
+

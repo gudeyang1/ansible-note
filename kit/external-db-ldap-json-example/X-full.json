@@ -1,0 +1,61 @@
+{
+	"database":[
+{
+                        "db_engine": "postgres", 
+                        "db_inst": "", 
+                        "db_login": "admin", 
+                        "db_password": "!Qaz2wsx3edc", 
+                        "db_port": "5111", 
+                        "db_server": "shc-dev-suite-jun-wan-1.hpeswlab.net", 
+                        "internal": false, 
+			"db_ssl": false,
+                        "product_name": "bo"
+                    },
+                    {
+                        "db_engine": "postgres",
+                        "db_inst": "",   
+                        "db_login": "admin",   
+                        "db_password": "!Qaz2wsx3edc",
+                        "db_port": "5111", 
+                        "db_server": "shc-dev-suite-jun-wan-1.hpeswlab.net",
+                        "internal": false, 
+			"db_ssl": false,
+                        "product_name": "smarta"
+                    },                 
+                    {
+                        "db_engine": "postgres",
+                        "db_inst": "",
+                        "db_login": "admin",
+                        "db_password": "!Qaz2wsx3edc",
+                        "db_port": "5111",
+                        "db_server": "shc-dev-suite-jun-wan-1.hpeswlab.net",
+                        "internal": false, 
+			"db_ssl": false,
+                        "product_name": "idm"
+                    },
+                    {
+                        "db_engine": "oracle", 
+                        "db_inst": "xe", 
+                        "db_login": "kit_ucmdb1", 
+                        "db_password": "cmdb_pwd", 
+                        "db_port": "49161", 
+                        "db_server": "16.155.198.134", 
+                        "internal": false, 
+			"db_ssl": false,
+                        "product_name": "ucmdb"
+                    },
+                    {
+                        "db_engine": "postgres",
+                        "db_inst": "",
+                        "db_login": "admin",
+                        "db_password": "!Qaz2wsx3edc",
+                        "db_port": "5111",
+                        "db_server": "shc-dev-suite-jun-wan-1.hpeswlab.net",
+                        "internal": false,
+                        "db_ssl": false,
+                        "product_name": "xruntime"
+                    }
+
+	]
+
+}

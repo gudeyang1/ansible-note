@@ -1,0 +1,90 @@
+- name: replace  deployer image name in suiteinfo.json 
+  shell: >
+    sed -ri 's#(.*image":\s{0,}").*(",)#\1{{ installer_registry }}:{{ installer_tag }}\2#g' /var/vols/itom/core/suite-install/suiteinfo.json
+- name: wait for api server port 3000 ready 
+  wait_for: host="{{ansible_fqdn|lower}}" port="3000"
+- name: get token
+  uri:
+    url: https://{{ ansible_fqdn|lower }}:3000/cdf/urest/v1.1/cdf/token
+    method: POST
+    headers: "{{ token_headers }}"
+    return_content: yes
+    status_code: 200
+    body: "{{ token_body }}"
+    body_format: json
+    timeout: 180
+    validate_certs: no
+  register: token
+- name: get crfs token
+  uri:
+    url: https://{{ ansible_fqdn|lower }}:3000/cdf/urest/v1.1/csrf-token
+    method: GET
+    headers: "{{csrf_headers}}"
+    return_content: yes
+    status_code: 201
+    body_format: json
+    timeout: 180
+    validate_certs: no
+  register: csrf
+
+- set_fact: format_cookie={{csrf.set_cookie|regex_replace('path=/;HttpOnly','')|regex_replace(';','')}}
+- wait_for: timeout=60
+- name: debug get cdf deployment status
+  uri:
+    url: https://{{ ansible_fqdn|lower }}:3000/cdf/urest/v1.1/deployment/status
+    method: GET
+    headers: "{{suite_installer_headers}}"
+    return_content: yes
+    status_code: 200
+    timeout: 180
+    validate_certs: no
+
+- name: get cdf deployment status
+  uri:
+    url: https://{{ ansible_fqdn|lower }}:3000/cdf/urest/v1.1/deployment/status
+    method: GET
+    headers: "{{suite_installer_headers}}"
+    return_content: yes
+    status_code: 200
+    timeout: 180
+    validate_certs: no
+  register: deployment_status
+  until: deployment_status.json.suite_db == "finished" and deployment_status.json.idm == "finished"
+  retries: 50
+  delay: 10
+
+- name: start suite deployer pod
+  uri:
+    url: https://{{ ansible_fqdn|lower }}:3000/cdf/urest/v1.1/deployment/suite-configuration
+    method: POST
+    headers: "{{suite_installer_headers}}"
+    return_content: yes
+    status_code: 200
+    timeout: 200
+    validate_certs: no
+  register: suite_installer
+
+- name: wait for service suite-conf-svc-itsma created
+  shell: >
+    kubectl get svc --namespace=core suite-conf-svc-itsma
+  ignore_errors: True
+  register: get_svc_result
+  until: get_svc_result.rc == 0
+  retries: 30
+  delay: 10
+
+    
+- name: open node port 31008 for suite deployer
+  shell: >
+    kubectl  get svc --namespace=core suite-conf-svc-itsma  -o yaml |sed  's/type: ClusterIP/type: NodePort/' |sed '/^.*targetPort: 8081/a\\    nodePort: 31008' |kubectl replace -f -
+
+- name: check if deployer is ready
+  uri:
+    url: http://{{ ansible_fqdn|lower }}:31008/itsma/install
+    method: GET
+    status_code: 200
+  register: result
+  until: result.status == 200
+  retries: 30
+  delay: 10
+

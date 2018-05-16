@@ -1,0 +1,94 @@
+- hosts: allnodes
+  remote_user: root
+  max_fail_percentage: 0
+  gather_facts: False
+  vars:
+    fqdn_right: "{% if '.hpeswlab.net' in ansible_fqdn %}right{%else%}wrong{%endif%}"
+  pre_tasks:
+    - name: get newtwork facts
+      setup: gather_subset=network
+    - name: debug
+      debug: msg="fqdn is {{fqdn_right}}"
+    - fail:
+        msg: "FQDN is {{ansible_fqdn}} not in domain hpeswlab.net"
+      when: fqdn_right == "wrong"
+    - debug: msg={{ExternalDBJsonContent}}
+    - debug: msg={{ExternalLdapJsonContent}}
+# get uuid of vm bios
+    - name: get uuid
+      shell: >
+        cat /sys/devices/virtual/dmi/id/product_uuid |tr [A-Z] [a-z]
+      register: get_uuid
+    - set_fact: uuid={{get_uuid.stdout}}
+    - name: debug
+      debug: msg={{uuid}}
+#  revert vm to snapshot when revert_vm == true ,default is false
+- hosts: localhost
+  max_fail_percentage: 0
+  gather_facts: False
+  remote_user: root
+  roles:
+    - { role: revert-vm ,when: revert_vm == "true"  or revert_vm == "default"  or revert_vm == "sunny"}
+
+# patch and backup 
+- hosts: master
+  gather_facts: False
+  max_fail_percentage: 0
+  remote_user: root
+  roles:
+    - { role: patch ,when: patch == "true" }
+    - { role: suite-backup ,when: backup == "true" }
+
+
+- hosts: allnodes
+  remote_user: root
+  gather_facts: False
+  max_fail_percentage: 0
+  pre_tasks:
+    - name: end play
+      meta: end_play
+      when: patch == "true" or backup == "true"
+#in canse of hang on get all facts , only get network subnet
+    - name: get newtwork facts
+      setup: gather_subset=network
+    - name: get install way
+      shell: cat /opt/kubernetes/do_not_touch
+      ignore_errors: True
+      register: install_way
+    - name: debug
+      debug: msg="install_way:{{install_way.stdout}}"
+    - name: sync time
+      shell: >
+        systemctl restart chronyd && systemctl enable chronyd
+# cdf 2017.10 don't support centos7.4 , but in 2018.01
+    - name: hack OS version to 7.3
+      shell: >
+       sed -ri 's#(CentOS.*release 7.)([1-9]{1}).(.*)#\13.\3#g' /etc/system-release
+
+
+- hosts: master
+  remote_user: root
+  gather_facts: False
+  max_fail_percentage: 0
+  pre_tasks:
+    - name: end play
+      meta: end_play
+      when: patch == "true" or backup == "true"
+#in canse of hang on get all facts , only get network subnet
+    - name: get newtwork facts
+      setup: gather_subset=network
+  roles:
+    - { role: mix-mode, when: MixMode == "true" }
+    - { role: platform-install, when: install_way.stdout != "suitekit" }
+    - { role: suite-installer-configuration, when: install_way.stdout != "suitekit" }
+    - { role: suite-upgrade-configuration, when: upgrade == "true" }
+    - { role: suite-upgrade-api, when: upgrade == "true"}
+    - { role: get_suite_status }
+    - { role: suite-clean, when: suite_exist.rc == 0 and depth != 1 and install_type != "install_from_backup"}
+    - { role: reload_install_body_from_backup, when: install_type == "install_from_backup"}
+    - { role: new-suite-install, when: depth !=1}
+    - { role: external-db, when: depth !=1 and ExternalDBJsonContent != ""}
+    - { role: external-ldap, when: depth !=1 and ExternalLdapJsonContent != ""}
+    - { role: deploy-suite, when: depth !=1}
+    - { role: automation-test, when: automation_tag != ""}
+    - { role: download-pkg, when: depth !=1}

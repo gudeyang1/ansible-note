@@ -1,0 +1,8 @@
+---
+# defaults file for deploy-suite
+installer_tag: latest
+jdbc_url: http://shc-nexus-repo.hpeswlab.net:8080/repository/itsma-releases/com/hpe/shared/services/ojdbc/8/ojdbc-8.jar
+jdbc_md5: 057478599050cf8999ced6069d3ccbf4
+mng_portal_passwd: 1Qaz2wsx,
+sma_admin_password: Admin_1234
+

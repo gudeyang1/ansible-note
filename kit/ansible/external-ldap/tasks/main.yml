@@ -1,0 +1,62 @@
+---
+# tasks file for external-ldap
+- name: external LDAP verfication
+  uri:
+    url: http://{{ansible_fqdn|lower}}:31008/itsma/verification/ldap
+    return_content: yes
+    method: POST
+    body: "{{ExternalLdapJsonContent }}"
+    body_format: json
+    timeout: 5000
+    validate_certs: no
+    status_code: 200
+  register: ldap_verfication_result
+- set_fact: standard_ldap_verification_result={{ldap_verfication_result.content|from_json}}
+- debug: msg="{{standard_ldap_verification_result[0].code}}"
+- fail:
+    msg: "{{standard_ldap_verification_result}}"
+  when: standard_ldap_verification_result[0].code != "200"
+
+- set_fact: external_ldap_deployer_body={{ExternalLdapJsonContent|from_json}}
+
+- set_fact:
+    install_post_body:
+      domain_name: "{{ ansible_fqdn|lower }}"
+      itom_suite_size: "{{itom_suite_size}}"
+      sysadmin_password: "{{sma_admin_password}}"
+      boadmin_password: "{{sma_admin_password}}"
+      database: "{{deployer_db_array}}"
+      activated_services: "{{activated_services}}"
+      default_registry_url: "{{ default_registry_url }}"
+      itom_suite_mode: "{{ mode }}"
+      itom_suite_install_type: "{{install_type}}"  #install_from_backup  new_install
+      itom_suite_backup_package_dir: "{{backup_package_dir}}"
+      itom_suite_backup_package_name: "{{backup_package_name}}"
+      ldap_server_ip: "{{external_ldap_deployer_body.ldap_server_ip}}"
+      ldap_server_port: "{{external_ldap_deployer_body.ldap_server_port}}"
+      ldap_use_ssl: "{{external_ldap_deployer_body.ldap_use_ssl}}"
+      ldap_search_sub: "{{external_ldap_deployer_body.ldap_search_sub}}"
+      ldap_base_dn: "{{external_ldap_deployer_body.ldap_base_dn}}"
+      ldap_bind_user: "{{external_ldap_deployer_body.ldap_bind_user}}"
+      ldap_bind_user_password: "{{external_ldap_deployer_body.ldap_bind_user_password}}"
+      ldap_user_base_dn: "{{external_ldap_deployer_body.ldap_user_base_dn}}"
+      ldap_user_class: "{{external_ldap_deployer_body.ldap_user_class}}"
+      ldap_user_filter: "{{external_ldap_deployer_body.ldap_user_filter}}"
+      ldap_user_firstname: "{{external_ldap_deployer_body.ldap_user_firstname}}"
+      ldap_user_lastname: "{{external_ldap_deployer_body.ldap_user_lastname}}"
+      ldap_user_disp_name_attr: "{{external_ldap_deployer_body.ldap_user_disp_name_attr}}"
+      ldap_user_name_attr: "{{external_ldap_deployer_body.ldap_user_name_attr}}"
+      ldap_user_email: "{{external_ldap_deployer_body.ldap_user_email}}"
+      ldap_user_avatar: "{{external_ldap_deployer_body.ldap_user_avatar}}"
+      ldap_user_manager_id: "{{external_ldap_deployer_body.ldap_user_manager_id}}"
+      ldap_user_manager_id_value: "{{external_ldap_deployer_body.ldap_user_manager_id_value}}"
+      ldap_user_phone: "{{external_ldap_deployer_body.ldap_user_phone}}"
+      ldap_user_lastmodified: "{{external_ldap_deployer_body.ldap_user_lastmodified}}"
+      ldap_group_base_dn: "{{external_ldap_deployer_body.ldap_group_base_dn}}"
+      ldap_group_class: "{{external_ldap_deployer_body.ldap_group_class}}"
+      ldap_group_base_filter: "{{external_ldap_deployer_body.ldap_group_base_filter}}"
+      ldap_group_name_attr: "{{external_ldap_deployer_body.ldap_group_name_attr}}"
+      ldap_group_member_attr: "{{external_ldap_deployer_body.ldap_group_member_attr}}"
+      ldap_user_group: "{{external_ldap_deployer_body.ldap_user_group}}"
+      ldap_admin_group: "{{external_ldap_deployer_body.ldap_admin_group}}"
+
