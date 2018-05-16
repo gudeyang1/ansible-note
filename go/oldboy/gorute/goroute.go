@@ -417,3 +417,101 @@ channel 与goroute 简单配合示例
 			}
 
 		}
+
+2.2.4 定时器
+// 每隔一秒输出一次, 无限循环
+		package main
+
+		import (
+			"time"
+			"fmt"
+		)
+
+		func main()  {
+			t := time.NewTicker(time.Second)
+
+			for v:= range t.C{  //	C是个channel
+				fmt.Println("hello",v)
+			}
+			t.stop()// 关闭定时器
+		}
+
+// 一次性定时器
+
+		package main
+
+		import (
+			"time"
+			"fmt"
+		)
+
+		func main()  {
+
+			ch := make(chan int,10)
+			ch2 := make(chan int,10)
+		go func() {
+			var i int
+			for{
+				ch <- i
+				time.Sleep(time.Second)
+				ch2 <- i*i
+				time.Sleep(time.Second)
+				i++
+			}
+		}()
+
+		for {
+			select {
+			case v := <- ch:
+				fmt.Println(v)
+			case v := <- ch2:
+				fmt.Println(v)
+			case <- time.After(time.Second):  //超时
+				fmt.Println("time out")
+				return
+			}
+			}
+		}
+
+
+2.2.6  捕获goroute panic
+
+		package main
+
+		import (
+			"fmt"
+			"time"
+		)
+
+		func test()  {
+			defer func() {
+				if err := recover(); err != nil{
+					//等于 两条语句分开写
+					// err := recover()
+					// if err != nil
+					fmt.Println("panic error")
+				}
+			}()
+			var m map[string]int
+
+			m["stu"] = 100
+		}
+
+		func working()  {
+			for {
+				fmt.Println("i'm working")
+				time.Sleep(time.Second)
+			}
+		}
+
+		func main()  {
+
+			go test()   // panic 不会影响下面代码运行
+			go working()
+			time.Sleep(time.Second *10)
+		}
+	输出:
+	i'm working
+	panic error
+	i'm working
+	i'm working
