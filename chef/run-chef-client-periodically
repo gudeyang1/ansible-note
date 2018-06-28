@@ -1,0 +1,122 @@
+# chef-client 定期执行
+> https://learn.chef.io/modules/manage-a-node-chef-server/rhel/bring-your-own-system/run-chef-client-periodically#/
+-----
+## 1. 获取chef-client cookbook from chefsupermarket
+```
+cd ~/learn-chef
+
+cat >>Berksfile<<EOF
+source 'https://supermarket.chef.io'
+cookbook 'chef-client'
+EOF
+
+```
+### get cookbook denpency
+```bash
+$ berks install
+  Resolving cookbook dependencies...
+  Fetching cookbook index from https://supermarket.chef.io...
+  Installing chef-client (10.0.4)
+  Installing cron (5.1.0)
+  Installing logrotate (2.2.0)
+  Installing windows (4.2.2)
+
+$ ls ~/.berkshelf/cookbooks
+  chef-client-10.0.4
+  cron-5.1.0
+  logrotate-2.2.0
+  windows-4.2.2
+
+#upload chefbook to chef-server
+$ berks upload --no-ssl-verify
+```
+
+## 2. create a role
+```bash
+$ mkdir  ~/learn-chef/roles
+$ cat >>~/learn-chef/roles/web.json <<EOF
+{
+   "name": "web",
+   "description": "Web server role.",
+   "json_class": "Chef::Role",
+   "default_attributes": {
+     "chef_client": {
+       "interval": 300,  //多少秒跑一次
+       "splay": 60  //300 +60s ,每隔5-6分钟跑一次,防止node并发增加server压力
+     }
+   },
+   "override_attributes": {
+   },
+   "chef_type": "role",
+   "run_list": ["recipe[chef-client::default]",
+                "recipe[chef-client::delete_validation]",
+                "recipe[learn_chef_httpd::default]"
+   ],
+   "env_run_lists": {
+   }
+}
+
+EOF
+
+#upload role to chef-server
+$ knife role from file roles/web.json
+  Updated Role web
+#test
+$ knife role list
+  web
+$ knife role show web
+    chef_type:           role
+    default_attributes:
+      chef_client:
+        interval: 300
+        splay:    60
+    description:         Web server role.
+    env_run_lists:
+    json_class:          Chef::Role
+    name:                web
+    override_attributes:
+    run_list:
+      recipe[chef-client::default]
+      recipe[chef-client::delete_validation]
+      recipe[learn_chef_httpd::default]
+# 设置node run role
+$ knife node run_list set node1-centos "role[web]"
+  node1-centos:
+    run_list: role[web]`
+
+#test
+$ knife node show node1-centos --run-list
+  node1-centos:
+    run_list: role[web]
+
+# 让所有有web这个role 的node 跑role 包含的cookbook
+$ knife ssh 'role:web' 'sudo chef-client' --ssh-user root --ssh-password "123456" --attribute 192.168.232.133
+# 查看role 节点状态
+$ knife status 'role:web' --run-list
+注意: 每隔5-6分钟跑一次chef-cleint 生产环境需要修改合适的值
+
+```
+## 3.清理环境
+```bash
+#删除节点
+[root@node lean-chef]# knife node list
+node1-centos
+work-node2
+
+$ knife node delete node1-centos --yes //删除node 的metadata
+  Deleted node[node1-centos]
+$ knife client delete node1-centos --yes //从apiserver删除node 的client
+  Deleted client[node1-centos]
+#删除cookbook
+[root@node lean-chef]# knife cookbook delete learn_chef_httpd --all --yes
+Deleted cookbook[learn_chef_httpd][0.3.1]
+Deleted cookbook[learn_chef_httpd][0.3.0]
+Deleted cookbook[learn_chef_httpd][0.2.0]
+Deleted cookbook[learn_chef_httpd][0.1.0]
+
+#删除role
+$ knife role delete web --yes
+  Deleted role[web]
+#删除privite key
+$ rm -rf /etc/chef/client.pem
+```
